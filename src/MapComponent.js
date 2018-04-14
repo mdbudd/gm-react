@@ -6,6 +6,11 @@ class MapComponent extends Component {
     showingInfoWindow: false,
     activeMarker: {},
     selectedPlace: {},
+    results: [
+      { latitude: 50.715536, longitude: -1.8734264 },
+      { latitude: 37.778519, longitude: -122.405640 },
+      { latitude: 37.759703, longitude: -122.428093 },
+    ],
   };
 
   onMarkerClick = (props, marker, e) => (
@@ -25,16 +30,17 @@ class MapComponent extends Component {
     }
   };
 
-  componentDidUpdate() {
+  componentDidMount() {
     const bounds = new window.google.maps.LatLngBounds()
     this.state.results.map((result) => {
       bounds.extend(new window.google.maps.LatLng(
         result.latitude,
         result.longitude
-      ));
+      ))
     });
 
-    this.refs.resultMap.fitBounds(bounds)
+    console.log(bounds)
+    //this.refs.resultMap.fitBounds(bounds)
   }
 
 
@@ -45,6 +51,7 @@ class MapComponent extends Component {
       margin: '0 auto',
       height: '100vh'
     }
+
 
     if (!this.props.loaded) {
       return <div>Loading...</div>
