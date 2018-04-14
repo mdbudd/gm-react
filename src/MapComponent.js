@@ -6,20 +6,21 @@ class MapComponent extends Component {
     showingInfoWindow: false,
     activeMarker: {},
     selectedPlace: {},
-    results: [
-      { latitude: 50.715536, longitude: -1.8734264 },
-      { latitude: 37.778519, longitude: -122.405640 },
-      { latitude: 37.759703, longitude: -122.428093 },
+    markers: [
+      { id: 1, title: 'Bournemouth', name: 'Bournemouth', address: 'Bournemouth', lat: 50.715536, lng: -1.8734264 },
+      { id: 2, title: 'Edinburgh', name: 'Edinburgh', address: 'Edinburgh', lat: 55.949344, lng: -3.209638 },
+      { id: 3, title: 'Stirling', name: 'Stirling', address: 'Edinburgh', lat: 56.116610, lng: -3.951215 },
     ],
   };
 
-  onMarkerClick = (props, marker, e) => (
+  onMarkerClick = (props, marker, e) => {
     this.setState({
       selectedPlace: props,
       activeMarker: marker,
       showingInfoWindow: true
-    })
-  )
+    });
+    console.log(props);
+  }
 
   onMapClicked = (props) => {
     if (this.state.showingInfoWindow) {
@@ -30,17 +31,41 @@ class MapComponent extends Component {
     }
   };
 
+  findLatLang(marker, geocoder, newMarkers) {
+    geocoder.geocode({ 'address': marker.address }, function (results, status) {
+      if (status === 'OK') {
+        var element = {};
+        element.lat = results[0].geometry.location.lat()
+        element.lng = results[0].geometry.location.lng()
+        newMarkers.push(element)
+        return (newMarkers)
+      } else {
+        alert('Couldnt\'t find the location ' + marker.address)
+        return;
+      }
+    })
+
+  }
   componentDidMount() {
     const bounds = new window.google.maps.LatLngBounds()
-    this.state.results.map((result) => {
-      bounds.extend(new window.google.maps.LatLng(
-        result.latitude,
-        result.longitude
-      ))
-    });
+    const geocoder = new window.google.maps.Geocoder()
 
-    console.log(bounds)
-    //this.refs.resultMap.fitBounds(bounds)
+    const newMarkers = []
+
+    this.state.markers.map((marker) => {
+      this.findLatLang(marker, geocoder, newMarkers)
+      bounds.extend(new window.google.maps.LatLng(
+       marker.lat,marker.lng
+    ));
+  }
+    )
+    console.log(newMarkers);
+    
+    newMarkers.map((nmarker) =>
+      console.log()
+    )
+
+    this.refs.mapComponent.map.fitBounds(bounds)
   }
 
 
@@ -56,22 +81,24 @@ class MapComponent extends Component {
     if (!this.props.loaded) {
       return <div>Loading...</div>
     }
-    console.log(this.props)
+    //console.log(this.props)
     return (
       <div style={style}>
-        <Map google={this.props.google}
+        <Map
+          google={this.props.google}
           onClick={this.onMapClicked}
-          ref="resultMap">
-          <Marker onClick={this.onMarkerClick}
-            name={'My location'}
-            position={{ lat: 50.715536, lng: -1.8734264 }} />
-          <Marker onClick={this.onMarkerClick}
-            title={'The marker`s title will appear as a tooltip.'}
-            name={'SOMA'}
-            position={{ lat: 37.778519, lng: -122.405640 }} />
-          <Marker onClick={this.onMarkerClick}
-            name={'Dolores park'}
-            position={{ lat: 37.759703, lng: -122.428093 }} />
+          ref="mapComponent">
+          {
+            this.state.markers.map((marker) =>
+              <Marker
+                key={marker.id}
+                onClick={this.onMarkerClick}
+                name={marker.name}
+                title={marker.title}
+                position={{ lat: marker.lat, lng: marker.lng }}
+              />
+            )
+          }
           <InfoWindow
             marker={this.state.activeMarker}
             visible={this.state.showingInfoWindow}>
