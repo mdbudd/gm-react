@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Map, InfoWindow, Marker, GoogleApiWrapper } from 'google-maps-react';
 
+
 class MapComponent extends Component {
   state = {
     showingInfoWindow: false,
@@ -19,7 +20,6 @@ class MapComponent extends Component {
       activeMarker: marker,
       showingInfoWindow: true
     });
-    console.log(props);
   }
 
   onMapClicked = (props) => {
@@ -31,45 +31,39 @@ class MapComponent extends Component {
     }
   };
 
-  findLatLang(marker, geocoder, newMarkers) {
-    geocoder.geocode({ 'address': marker.address }, function (results, status) {
-      if (status === 'OK') {
-        var element = {};
-        element.lat = results[0].geometry.location.lat()
-        element.lng = results[0].geometry.location.lng()
-        newMarkers.push(element)
-        return (newMarkers)
-      } else {
-        alert('Couldnt\'t find the location ' + marker.address)
-        return;
-      }
+  findLatLng({ address }) {
+    const geocoder = new window.google.maps.Geocoder()
+    return new Promise((resolve, reject) => {
+      geocoder.geocode({ address }, (results, status) => {
+        if (status === 'OK') {
+          resolve({
+            lat: results[0].geometry.location.lat(),
+            lng: results[0].geometry.location.lng()
+          })
+        } else {
+          alert('Couldnt\'t find the location ' + address)
+          reject()
+        }
+      })
     })
-
   }
+
   componentDidMount() {
     const bounds = new window.google.maps.LatLngBounds()
-    const geocoder = new window.google.maps.Geocoder()
-
-    const newMarkers = []
-
-    this.state.markers.map((marker) => {
-      this.findLatLang(marker, geocoder, newMarkers)
-      bounds.extend(new window.google.maps.LatLng(
-       marker.lat,marker.lng
-    ));
+    Promise
+      .all(this.state.markers.map(this.findLatLng))
+      .then(geocodes => {
+        geocodes
+          .filter(Boolean)
+          .forEach((coords) => {
+            bounds.extend(new window.google.maps.LatLng(coords));
+          });
+        this.refs.mapComponent.map.fitBounds(bounds)
+      })
   }
-    )
-    console.log(newMarkers);
-    
-    newMarkers.map((nmarker) =>
-      console.log()
-    )
-
-    this.refs.mapComponent.map.fitBounds(bounds)
-  }
-
 
   render() {
+
     const style = {
       width: '80%',
       position: 'relative',
@@ -77,11 +71,12 @@ class MapComponent extends Component {
       height: '100vh'
     }
 
-
     if (!this.props.loaded) {
       return <div>Loading...</div>
     }
-    //console.log(this.props)
+
+    console.log(this.state)
+
     return (
       <div style={style}>
         <Map
