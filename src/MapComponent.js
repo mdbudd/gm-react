@@ -10,7 +10,7 @@ class MapComponent extends Component {
     markers: [
       { id: 1, title: 'Bournemouth', name: 'Bournemouth', address: 'Bournemouth', lat: 50.715536, lng: -1.8734264 },
       { id: 2, title: 'Edinburgh', name: 'Edinburgh', address: 'Edinburgh', lat: 55.949344, lng: -3.209638 },
-      { id: 3, title: 'Stirling', name: 'Stirling', address: 'Edinburgh', lat: 56.116610, lng: -3.951215 },
+      { id: 3, title: 'Stirling', name: 'Stirling', address: 'Stirling', lat: 56.116610, lng: -3.951215 },
     ],
   };
 
@@ -31,10 +31,9 @@ class MapComponent extends Component {
     }
   };
 
-  findLatLng({ address }) {
-    const geocoder = new window.google.maps.Geocoder()
+  findLatLng = ({ address }) => {
     return new Promise((resolve, reject) => {
-      geocoder.geocode({ address }, (results, status) => {
+      this.geocoder.geocode({ address }, (results, status) => {
         if (status === 'OK') {
           resolve({
             lat: results[0].geometry.location.lat(),
@@ -49,16 +48,17 @@ class MapComponent extends Component {
   }
 
   componentDidMount() {
-    const bounds = new window.google.maps.LatLngBounds()
+    this.bounds = new window.google.maps.LatLngBounds()
+    this.geocoder = new window.google.maps.Geocoder()
     Promise
       .all(this.state.markers.map(this.findLatLng))
       .then(geocodes => {
         geocodes
           .filter(Boolean)
           .forEach((coords) => {
-            bounds.extend(new window.google.maps.LatLng(coords));
+            this.bounds.extend(new window.google.maps.LatLng(coords));
           });
-        this.refs.mapComponent.map.fitBounds(bounds)
+        this.refs.mapComponent.map.fitBounds(this.bounds)
       })
   }
 
