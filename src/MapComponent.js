@@ -1,17 +1,26 @@
 import React, { Component } from 'react';
+//import PropTypes from 'prop-types';
+import styled from 'styled-components';
 import { Map, InfoWindow, Marker, GoogleApiWrapper } from 'google-maps-react';
 
+//import manifest from '../manifest';
+
+const Div = styled.div`
+  width: 100%;
+  position: relative;
+  margin: 0 auto;
+  height: 90vh;
+`;
 
 class MapComponent extends Component {
+
+  //static propTypes = manifest.propTypes;
+
   state = {
     showingInfoWindow: false,
     activeMarker: {},
     selectedPlace: {},
-    markers: [
-      { id: 1, title: 'Bournemouth', name: 'Bournemouth', address: 'Bournemouth', lat: 50.715536, lng: -1.8734264 },
-      { id: 2, title: 'Edinburgh', name: 'Edinburgh', address: 'Edinburgh', lat: 55.949344, lng: -3.209638 },
-      { id: 3, title: 'Stirling', name: 'Stirling', address: 'Stirling', lat: 56.116610, lng: -3.951215 },
-    ],
+    markers: this.props.markers,
   };
 
   onMarkerClick = (props, marker, e) => {
@@ -31,11 +40,13 @@ class MapComponent extends Component {
     }
   };
 
-  findLatLng = ({ address }) => {
+  findMarker = ({ id, title, address }) => {
     return new Promise((resolve, reject) => {
       this.geocoder.geocode({ address }, (results, status) => {
         if (status === 'OK') {
           resolve({
+            id: id,
+            title: title,
             lat: results[0].geometry.location.lat(),
             lng: results[0].geometry.location.lng()
           })
@@ -50,35 +61,31 @@ class MapComponent extends Component {
   componentDidMount() {
     this.bounds = new window.google.maps.LatLngBounds()
     this.geocoder = new window.google.maps.Geocoder()
+    this.foundMarkers = [];
     Promise
-      .all(this.state.markers.map(this.findLatLng))
-      .then(geocodes => {
-        geocodes
+      .all(this.props.markers.map(this.findMarker))
+      .then(results => {
+        results
           .filter(Boolean)
-          .forEach((coords) => {
-            this.bounds.extend(new window.google.maps.LatLng(coords));
+          .forEach((result) => {
+            this.bounds.extend(new window.google.maps.LatLng(result.lat, result.lng));
+            this.foundMarkers.push(result);
           });
+        this.setState({
+          markers: this.foundMarkers
+        })
         this.refs.mapComponent.map.fitBounds(this.bounds)
       })
   }
 
   render() {
 
-    const style = {
-      width: '80%',
-      position: 'relative',
-      margin: '0 auto',
-      height: '100vh'
-    }
-
     if (!this.props.loaded) {
       return <div>Loading...</div>
     }
-
-    console.log(this.state)
-
+    //console.log(this.state.markers)
     return (
-      <div style={style}>
+      <Div>
         <Map
           google={this.props.google}
           onClick={this.onMapClicked}
@@ -88,7 +95,6 @@ class MapComponent extends Component {
               <Marker
                 key={marker.id}
                 onClick={this.onMarkerClick}
-                name={marker.name}
                 title={marker.title}
                 position={{ lat: marker.lat, lng: marker.lng }}
               />
@@ -98,16 +104,16 @@ class MapComponent extends Component {
             marker={this.state.activeMarker}
             visible={this.state.showingInfoWindow}>
             <div>
-              <h1>{this.state.selectedPlace.name}</h1>
+              <h1>{this.state.selectedPlace.title}</h1>
             </div>
           </InfoWindow>
         </Map>
-      </div>
+      </Div>
     )
+
   }
 }
 
-
 export default GoogleApiWrapper({
-  apiKey: process.env.REACT_APP_GOOGLE_API_KEY
+  apiKey: "AIzaSyAey7u198lGkRMVja1QsLmYlO4-GIa9wr0"
 })(MapComponent)
