@@ -40,13 +40,13 @@ class MapComponent extends Component {
     }
   };
 
-  findMarker = ({ id, title, address }) => {
+  findMarker = ({ address, ...props }) => {
     return new Promise((resolve, reject) => {
       this.geocoder.geocode({ address }, (results, status) => {
         if (status === 'OK') {
           resolve({
-            id: id,
-            title: title,
+            id: props.id,
+            title: props.title,
             lat: results[0].geometry.location.lat(),
             lng: results[0].geometry.location.lng()
           })
@@ -114,6 +114,8 @@ class MapComponent extends Component {
   }
 }
 
-export default GoogleApiWrapper({
-  apiKey: "AIzaSyAey7u198lGkRMVja1QsLmYlO4-GIa9wr0"
-})(MapComponent)
+export default GoogleApiWrapper(
+  (props) => ({
+      apiKey: props.apiKey
+  })
+)(MapComponent)

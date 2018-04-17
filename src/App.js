@@ -8,6 +8,8 @@ let markers = [
   { id: 3, title: 'Stirling', address: 'Stirling' },
   { id: 4, title: 'Germany', address: 'Germany' },
 ];
+
+
 class App extends Component {
   render() {
     return (
@@ -17,7 +19,7 @@ class App extends Component {
         </header>
         <MapComponent
           markers={markers}
-          ApiKey="AIzaSyAey7u198lGkRMVja1QsLmYlO4-GIa9wr0"
+          apiKey="AIzaSyAey7u198lGkRMVja1QsLmYlO4-GIa9wr0"
         />
       </div>
     );
